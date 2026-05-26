@@ -134,19 +134,19 @@
       return AC;
     }
 
-    // Game Boy pentatonic across 3 octaves
-    const GB_NOTES = [131,165,196,220,262,294,330,392,440,523,587,659,784,880,1047];
+    // E minor pentatonic — directional, focused feel
+    const VECTOR_NOTES = [165, 196, 220, 262, 330, 392, 440, 523, 659, 784, 880];
 
-    function synthTick(freq = 1200, dur = 0.045, vol = 0.055) {
+    function synthTick() {
       try {
         const a = ac(), t = a.currentTime;
         const r = grid.getBoundingClientRect();
         const xFrac = Math.max(0, Math.min(1, (mx - r.left) / r.width));
-        const note = GB_NOTES[Math.min(Math.floor(xFrac * GB_NOTES.length), GB_NOTES.length - 1)];
+        const note = VECTOR_NOTES[Math.min(Math.floor(xFrac * VECTOR_NOTES.length), VECTOR_NOTES.length - 1)];
         const o = a.createOscillator(), g = a.createGain();
         o.connect(g); g.connect(a.destination);
         o.type = 'square'; o.frequency.value = note;
-        g.gain.setValueAtTime(0.038, t);
+        g.gain.setValueAtTime(0.036, t);
         g.gain.exponentialRampToValueAtTime(0.001, t + 0.052);
         o.start(t); o.stop(t + 0.056);
       } catch (_) {}
@@ -155,15 +155,23 @@
     function synthClick() {
       try {
         const a = ac(), t = a.currentTime;
-        // Game Boy power-up — ascending C major arpeggio, square wave
-        [262, 330, 392, 523, 659, 784, 1047].forEach((note, i) => {
-          const d = i * 0.048;
+        // Noise explosion
+        const buf = a.createBuffer(1, Math.floor(a.sampleRate * 0.15), a.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (data.length * 0.3));
+        const src = a.createBufferSource(); src.buffer = buf;
+        const flt = a.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 900;
+        const gn = a.createGain(); gn.gain.setValueAtTime(0.20, t); gn.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        src.connect(flt); flt.connect(gn); gn.connect(a.destination); src.start(t);
+        // E minor ascending arpeggio
+        [165, 220, 330, 440, 659, 880].forEach((note, i) => {
+          const d = 0.14 + i * 0.05;
           const o = a.createOscillator(), g = a.createGain();
           o.connect(g); g.connect(a.destination);
           o.type = 'square'; o.frequency.value = note;
-          g.gain.setValueAtTime(0.048, t + d);
-          g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.075);
-          o.start(t + d); o.stop(t + d + 0.08);
+          g.gain.setValueAtTime(0.040, t + d);
+          g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.07);
+          o.start(t + d); o.stop(t + d + 0.075);
         });
       } catch (_) {}
     }
