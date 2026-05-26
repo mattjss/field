@@ -134,41 +134,37 @@
       return AC;
     }
 
+    // Game Boy pentatonic across 3 octaves
+    const GB_NOTES = [131,165,196,220,262,294,330,392,440,523,587,659,784,880,1047];
+
     function synthTick(freq = 1200, dur = 0.045, vol = 0.055) {
       try {
-        const a = ac();
+        const a = ac(), t = a.currentTime;
+        const r = grid.getBoundingClientRect();
+        const xFrac = Math.max(0, Math.min(1, (mx - r.left) / r.width));
+        const note = GB_NOTES[Math.min(Math.floor(xFrac * GB_NOTES.length), GB_NOTES.length - 1)];
         const o = a.createOscillator(), g = a.createGain();
         o.connect(g); g.connect(a.destination);
-        o.type = 'sine';
-        o.frequency.setValueAtTime(freq, a.currentTime);
-        o.frequency.exponentialRampToValueAtTime(freq * 0.55, a.currentTime + dur);
-        g.gain.setValueAtTime(vol, a.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + dur);
-        o.start(); o.stop(a.currentTime + dur + 0.005);
+        o.type = 'square'; o.frequency.value = note;
+        g.gain.setValueAtTime(0.038, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.052);
+        o.start(t); o.stop(t + 0.056);
       } catch (_) {}
     }
 
     function synthClick() {
       try {
-        const a = ac();
-        const t = a.currentTime;
-        const o1 = a.createOscillator(), g1 = a.createGain();
-        o1.connect(g1); g1.connect(a.destination);
-        o1.type = 'sine';
-        o1.frequency.setValueAtTime(280, t);
-        o1.frequency.exponentialRampToValueAtTime(55, t + 0.18);
-        g1.gain.setValueAtTime(0.28, t);
-        g1.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-        o1.start(t); o1.stop(t + 0.23);
-
-        const o2 = a.createOscillator(), g2 = a.createGain();
-        o2.connect(g2); g2.connect(a.destination);
-        o2.type = 'sine';
-        o2.frequency.setValueAtTime(2800, t);
-        o2.frequency.exponentialRampToValueAtTime(900, t + 0.1);
-        g2.gain.setValueAtTime(0.038, t);
-        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-        o2.start(t); o2.stop(t + 0.13);
+        const a = ac(), t = a.currentTime;
+        // Game Boy power-up — ascending C major arpeggio, square wave
+        [262, 330, 392, 523, 659, 784, 1047].forEach((note, i) => {
+          const d = i * 0.048;
+          const o = a.createOscillator(), g = a.createGain();
+          o.connect(g); g.connect(a.destination);
+          o.type = 'square'; o.frequency.value = note;
+          g.gain.setValueAtTime(0.048, t + d);
+          g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.075);
+          o.start(t + d); o.stop(t + d + 0.08);
+        });
       } catch (_) {}
     }
 
