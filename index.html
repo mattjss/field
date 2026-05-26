@@ -150,8 +150,8 @@
     let hoverAudio = null, clickAudio = null;
     function initAudio() {
       if (hoverAudio) return;
-      hoverAudio = new Audio('./sounds/hover.mp3');
-      hoverAudio.volume = 0.25;
+      hoverAudio = new Audio('./sounds/selection.mp3');
+      hoverAudio.volume = 0.06;
       clickAudio = new Audio('./sounds/selection.mp3');
       clickAudio.volume = 0.42;
     }
@@ -171,7 +171,7 @@
       if (!isInside) return;
       const dx = x - lastTickX, dy = y - lastTickY;
       const now = performance.now();
-      if (dx * dx + dy * dy >= 32 * 32 && now - lastTickMs > 140) {
+      if (dx * dx + dy * dy >= 48 * 48 && now - lastTickMs > 220) {
         synthTick();
         lastTickX = x; lastTickY = y; lastTickMs = now;
       }
