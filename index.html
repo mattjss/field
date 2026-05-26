@@ -73,7 +73,7 @@
       background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.95) 100%);
       border-radius: 0 1px 1px 0;
       transform-origin: 50% 50%;
-      will-change: transform;
+      will-change: transform, opacity;
     }
     .filing::after {
       content: '';
@@ -137,6 +137,15 @@
     updateCenters();
     window.addEventListener('resize', updateCenters);
 
+    // Cursor dot
+    const cursorEl = document.createElement('div');
+    Object.assign(cursorEl.style, {
+      position: 'absolute', width: '5px', height: '5px', borderRadius: '50%',
+      background: 'rgba(255,255,255,0.7)', pointerEvents: 'none',
+      transform: 'translate(-50%,-50%)', opacity: '0', transition: 'opacity 0.18s',
+    });
+    grid.appendChild(cursorEl);
+
     // ── Audio ─────────────────────────────────────────────────
     let hoverAudio = null, clickAudio = null;
     function initAudio() {
@@ -175,6 +184,8 @@
         const r = grid.getBoundingClientRect();
         grid.style.setProperty('--mx', ((mx - r.left) / r.width  * 100) + '%');
         grid.style.setProperty('--my', ((my - r.top)  / r.height * 100) + '%');
+        cursorEl.style.left = (mx - r.left) + 'px';
+        cursorEl.style.top  = (my - r.top)  + 'px';
       }
     });
 
@@ -182,11 +193,13 @@
       isInside = true;
       grid.style.setProperty('--glow', '1');
       synthTick();
+      cursorEl.style.opacity = '1';
     });
 
     grid.addEventListener('mouseleave', () => {
       isInside = false;
       grid.style.setProperty('--glow', '0');
+      cursorEl.style.opacity = '0';
     });
 
     grid.addEventListener('pointerdown', e => {
@@ -237,7 +250,19 @@
           curAngles[i] = lerpAngle(curAngles[i], tgtAngles[i], LERP);
         }
 
-        filings[i].style.transform = `rotate(${curAngles[i]}deg)`;
+        let scaleX = 1, opacity = 0.18;
+        if (isInside) {
+          const dx = mx - c.x, dy = my - c.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const prox = Math.max(0, 1 - dist / 115);
+          scaleX  = 1 + prox * 1.5;
+          opacity = 0.18 + prox * 0.74;
+        }
+        const burstFactor = Math.min(Math.abs(burstVel[i]) * 0.1, 0.55);
+        opacity = Math.max(opacity, 0.18 + burstFactor);
+
+        filings[i].style.transform = `rotate(${curAngles[i]}deg) scaleX(${scaleX.toFixed(3)})`;
+        filings[i].style.opacity = opacity.toFixed(3);
       }
       requestAnimationFrame(tick);
     }
