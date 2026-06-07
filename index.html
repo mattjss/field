@@ -139,20 +139,24 @@
     grid.appendChild(cursorEl);
 
     // ── Audio ─────────────────────────────────────────────────
+    let audioMuted = new URLSearchParams(location.search).has('embed');
+    window.addEventListener('message', e => { if (e.data?.type === 'setMuted') audioMuted = !!e.data.muted; });
     let hoverAudio = null, clickAudio = null;
     function initAudio() {
       if (hoverAudio) return;
-      hoverAudio = new Audio('./sounds/selection.mp3');
-      hoverAudio.volume = 0.06;
+      hoverAudio = new Audio('./sounds/hover-vector.wav');
+      hoverAudio.volume = 0.35;
       clickAudio = new Audio('./sounds/selection.mp3');
       clickAudio.volume = 0.42;
     }
     function synthTick() {
+      if (audioMuted) return;
       initAudio();
       hoverAudio.currentTime = 0;
       hoverAudio.play().catch(() => {});
     }
     function synthClick() {
+      if (audioMuted) return;
       initAudio();
       clickAudio.currentTime = 0;
       clickAudio.play().catch(() => {});
